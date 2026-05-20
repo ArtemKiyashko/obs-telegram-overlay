@@ -1,0 +1,5 @@
+overlay/node_modules/
+overlay/dist/
+overlay/.vite/
+bot/bin/
+bot/obj/
