@@ -16,6 +16,7 @@
       "**/obj": true,
       "**/node_modules": true,
       "**/dist": true
-    }
+    },
+    "debug.internalConsoleOptions": "neverOpen"
   }
 }
