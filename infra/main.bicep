@@ -13,8 +13,8 @@ param signalrSkuName string = 'Free_F1'
 
 var storageAccountName = toLower(replace('${prefix}st${uniqueString(resourceGroup().id)}', '-', ''))
 var signalRName = '${prefix}-signalr'
-var functionPlanName = '${prefix}-plan'
-var functionAppName = '${prefix}-func'
+var functionPlanName = '${prefix}-plan-linux'
+var functionAppName = '${prefix}-func-linux'
 var appInsightsName = '${prefix}-appi'
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
 
