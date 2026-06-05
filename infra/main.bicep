@@ -143,35 +143,35 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           value: appInsights.properties.ConnectionString
         }
         {
-          name: 'Bot:OverlayBaseUrl'
+          name: 'Bot__OverlayBaseUrl'
           value: storageAccount.properties.primaryEndpoints.web
         }
         {
-          name: 'Bot:OverlayApiBaseUrl'
+          name: 'Bot__OverlayApiBaseUrl'
           value: 'https://${functionAppName}.azurewebsites.net'
         }
         {
-          name: 'Bot:OverlayAssetsBasePath'
+          name: 'Bot__OverlayAssetsBasePath'
           value: '/overlay-assets'
         }
         {
-          name: 'Bot:OverlayStaticContainer'
+          name: 'Bot__OverlayStaticContainer'
           value: '$web'
         }
         {
-          name: 'Bot:OverlayControlContainer'
+          name: 'Bot__OverlayControlContainer'
           value: 'control'
         }
         {
-          name: 'Bot:SignalRConnectionString'
+          name: 'Bot__SignalRConnectionString'
           value: signalR.listKeys().primaryConnectionString
         }
         {
-          name: 'Bot:SignalRHubName'
+          name: 'Bot__SignalRHubName'
           value: 'overlay'
         }
         {
-          name: 'Bot:SignalRTokenLifetimeMinutes'
+          name: 'Bot__SignalRTokenLifetimeMinutes'
           value: '10'
         }
       ]
