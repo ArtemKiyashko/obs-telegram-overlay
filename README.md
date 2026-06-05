@@ -34,7 +34,6 @@ Azure Storage static website hosting is cheaper than duplicating deployments in 
 - `bot/`: webhook, overlay registry, SignalR negotiate, Telegram command handling
 - `overlay/`: OBS-friendly client bundle with browser TTS and reconnect support
 - `infra/main.bicep`: Azure baseline deployment
-- `infra/publish-overlay-assets.sh`: uploads `overlay.js` and `overlay.css` to the storage static website
 - `obs-telegram-overlay.code-workspace`: VS Code multi-root workspace file
 
 ## Telegram Management Commands
@@ -65,7 +64,7 @@ Configure `Bot:TelegramManagementChatId` and send commands from that chat:
    npm run build
    ```
 
-4. Use `infra/publish-overlay-assets.sh` after provisioning Azure Storage static website hosting.
+4. Run overlay pipeline after infra deployment to publish static assets.
 
 ## Azure Deployment
 
@@ -78,12 +77,7 @@ az deployment group create \
   --parameters @infra/main.parameters.example.json
 ```
 
-Then publish the overlay assets:
-
-```bash
-./infra/enable-static-website.sh <storage-account-name> <resource-group>
-./infra/publish-overlay-assets.sh <storage-account-name> <resource-group>
-```
+Then run the overlay deployment pipeline to publish static assets and template.
 
 ## Azure DevOps Pipeline
 

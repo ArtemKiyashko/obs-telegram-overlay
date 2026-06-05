@@ -67,3 +67,36 @@ stages:
                   --template-file "$(infraTemplatePath)" \
                   --parameters prefix="$(bicepPrefix)" \
                   --output table
+
+                storageAccountName=$(az deployment group show \
+                  --resource-group "$(resourceGroup)" \
+                  --name "${deploymentName}" \
+                  --query properties.outputs.storageAccountName.value \
+                  -o tsv)
+
+                if [[ -z "$storageAccountName" ]]; then
+                  echo "ERROR: storageAccountName output is empty in deployment ${deploymentName}."
+                  exit 1
+                fi
+
+                echo "##vso[task.setvariable variable=resolvedStorageAccountName]$storageAccountName"
+
+          - task: AzureCLI@2
+            displayName: Enable static website hosting
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+
+                az storage account show \
+                  --name "$(resolvedStorageAccountName)" \
+                  --resource-group "$(resourceGroup)" >/dev/null
+
+                az storage blob service-properties update \
+                  --account-name "$(resolvedStorageAccountName)" \
+                  --auth-mode login \
+                  --static-website \
+                  --index-document index.html \
+                  --404-document 404.html

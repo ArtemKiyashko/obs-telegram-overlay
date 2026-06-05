@@ -1,30 +1,21 @@
-# React + TypeScript + Vite
+# Overlay Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend bundle for OBS browser source.
 
-Currently, two official plugins are available:
+## Commands
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- `npm run dev` - local development server
+- `npm run build` - production build to `dist/`
+- `npm run lint` - ESLint checks
 
-## Expanding the ESLint configuration
+## Static publish artifacts
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+After build, these files are published to Azure Storage static website:
 
-- Configure the top-level `parserOptions` property like this:
+- `dist/overlay.js` -> `overlay-assets/overlay.js`
+- `dist/overlay.css` -> `overlay-assets/overlay.css`
+- `dist/overlay-template.html` -> `overlay-assets/overlay-template.html`
 
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json', './tsconfig.app.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
+The bot then creates per-overlay entrypoints under `/overlays/{overlayId}/` by copying `overlay-template.html` and generating `config.json`.
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+Publishing to Azure Storage is handled by `overlay/azure-pipeline.yml`.
