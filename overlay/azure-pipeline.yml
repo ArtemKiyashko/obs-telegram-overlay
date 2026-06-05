@@ -1,0 +1,63 @@
+name: overlay-deploy-$(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - overlay/*
+      - overlay/**
+      - infra/enable-static-website.sh
+      - infra/publish-overlay-assets.sh
+
+pr: none
+
+variables:
+  - group: obs-overlay-shared
+  - group: obs-overlay-overlay
+  - name: vmImage
+    value: ubuntu-latest
+  - name: nodeVersion
+    value: 20.x
+
+stages:
+  - stage: DeployOverlay
+    displayName: Build and publish overlay assets
+    condition: and(succeeded(), ne(variables['azureServiceConnection'], ''), ne(variables['resourceGroup'], ''), ne(variables['storageAccountName'], ''))
+    jobs:
+      - deployment: PublishOverlayAssets
+        displayName: Build overlay and upload static files
+        environment: production
+        pool:
+          vmImage: $(vmImage)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: NodeTool@0
+                  displayName: Use Node.js $(nodeVersion)
+                  inputs:
+                    versionSpec: $(nodeVersion)
+
+                - script: |
+                    npm ci
+                    npm run lint
+                    npm run build
+                  displayName: Lint and build overlay
+                  workingDirectory: overlay
+
+                - task: AzureCLI@2
+                  displayName: Publish overlay assets
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+
+                      chmod +x infra/enable-static-website.sh infra/publish-overlay-assets.sh
+                      ./infra/enable-static-website.sh "$(storageAccountName)" "$(resourceGroup)"
+                      ./infra/publish-overlay-assets.sh "$(storageAccountName)" "$(resourceGroup)"

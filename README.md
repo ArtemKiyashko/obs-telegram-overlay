@@ -85,6 +85,29 @@ Then publish the overlay assets:
 ./infra/publish-overlay-assets.sh <storage-account-name> <resource-group>
 ```
 
+## Azure DevOps Pipeline
+
+The repository includes 3 Azure DevOps pipelines (one per project):
+
+- [bot/azure-pipeline.yml](bot/azure-pipeline.yml): validates bot on PR/push and deploys Function App from `main`.
+- [overlay/azure-pipeline.yml](overlay/azure-pipeline.yml): deploys static overlay assets from `overlay/` changes.
+- [infra/azure-pipeline.yml](infra/azure-pipeline.yml): deploys Bicep infrastructure from `infra/` changes.
+
+Behavior:
+
+- Bot pipeline validates pushes/PRs for `develop` and `main` (with `bot/` path filter).
+- Deploy stages run only from `main` and only for their path filters.
+- This allows independent releases of bot, overlay, and infrastructure while keeping one pipeline file per project.
+
+Before first run, create Azure DevOps Variable Groups and fill required values:
+
+- `obs-overlay-shared`
+- `obs-overlay-bot`
+- `obs-overlay-overlay`
+- `obs-overlay-infra`
+
+Set pipeline variables described in [.azuredevops/pipeline-variables.example.md](.azuredevops/pipeline-variables.example.md) before enabling deployment.
+
 ## Cost Notes
 
 - Start with `Free_F1` SignalR for low traffic and testing.
