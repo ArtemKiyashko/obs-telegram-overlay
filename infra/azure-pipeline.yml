@@ -25,48 +25,44 @@ stages:
     displayName: Deploy infrastructure with Bicep
     condition: and(succeeded(), ne(variables['azureServiceConnection'], ''), ne(variables['resourceGroup'], ''))
     jobs:
-      - deployment: ProvisionInfra
+      - job: ProvisionInfra
         displayName: Run what-if and apply infrastructure changes
-        environment: production
         pool:
           vmImage: $(vmImage)
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
+        steps:
+          - checkout: self
 
-                - task: AzureCLI@2
-                  displayName: Validate and preview Bicep changes
-                  inputs:
-                    azureSubscription: $(azureServiceConnection)
-                    scriptType: bash
-                    scriptLocation: inlineScript
-                    inlineScript: |
-                      set -euo pipefail
-                      deploymentName="obs-telegram-overlay-$(Build.BuildId)"
+          - task: AzureCLI@2
+            displayName: Validate and preview Bicep changes
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                deploymentName="obs-telegram-overlay-$(Build.BuildId)"
 
-                      az bicep build --file "$(infraTemplatePath)"
+                az bicep build --file "$(infraTemplatePath)"
 
-                      az deployment group what-if \
-                        --name "${deploymentName}" \
-                        --resource-group "$(resourceGroup)" \
-                        --template-file "$(infraTemplatePath)" \
-                        prefix="$(bicepPrefix)"
+                az deployment group what-if \
+                  --name "${deploymentName}" \
+                  --resource-group "$(resourceGroup)" \
+                  --template-file "$(infraTemplatePath)" \
+                  prefix="$(bicepPrefix)"
 
-                - task: AzureCLI@2
-                  displayName: Apply Bicep deployment
-                  inputs:
-                    azureSubscription: $(azureServiceConnection)
-                    scriptType: bash
-                    scriptLocation: inlineScript
-                    inlineScript: |
-                      set -euo pipefail
-                      deploymentName="obs-telegram-overlay-$(Build.BuildId)"
+          - task: AzureCLI@2
+            displayName: Apply Bicep deployment
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+                deploymentName="obs-telegram-overlay-$(Build.BuildId)"
 
-                      az deployment group create \
-                        --name "${deploymentName}" \
-                        --resource-group "$(resourceGroup)" \
-                        --template-file "$(infraTemplatePath)" \
-                        prefix="$(bicepPrefix)" \
-                        --output table
+                az deployment group create \
+                  --name "${deploymentName}" \
+                  --resource-group "$(resourceGroup)" \
+                  --template-file "$(infraTemplatePath)" \
+                  prefix="$(bicepPrefix)" \
+                  --output table
