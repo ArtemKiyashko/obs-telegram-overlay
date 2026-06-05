@@ -13,11 +13,12 @@ pr: none
 
 variables:
   - group: obs-overlay-shared
-  - group: obs-overlay-infra
   - name: vmImage
     value: ubuntu-latest
   - name: infraTemplatePath
     value: infra/main.bicep
+  - name: bicepPrefix
+    value: obstg
 
 stages:
   - stage: DeployInfra
@@ -51,8 +52,7 @@ stages:
                         --name "${deploymentName}" \
                         --resource-group "$(resourceGroup)" \
                         --template-file "$(infraTemplatePath)" \
-                        prefix="$(bicepPrefix)" \
-                        location="$(location)"
+                        prefix="$(bicepPrefix)"
 
                 - task: AzureCLI@2
                   displayName: Apply Bicep deployment
@@ -69,5 +69,4 @@ stages:
                         --resource-group "$(resourceGroup)" \
                         --template-file "$(infraTemplatePath)" \
                         prefix="$(bicepPrefix)" \
-                        location="$(location)" \
                         --output table

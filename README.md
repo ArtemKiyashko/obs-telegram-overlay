@@ -98,12 +98,13 @@ Behavior:
 - Bot pipeline validates pushes/PRs for `develop` and `main` (with `bot/` path filter).
 - Deploy stages run only from `main` and only for their path filters.
 - This allows independent releases of bot, overlay, and infrastructure while keeping one pipeline file per project.
+- Bot deploy resolves Function App name automatically from infra deployment outputs; `functionAppName` variable can be used as manual override.
+- Overlay deploy resolves Storage Account name automatically from infra deployment outputs; `storageAccountName` variable can be used as manual override.
 
 Before first run, create Azure DevOps Variable Groups and fill required values:
 
 - `obs-overlay-shared`
 - `obs-overlay-bot`
-- `obs-overlay-overlay`
 - `obs-overlay-infra`
 
 Set pipeline variables described in [.azuredevops/pipeline-variables.example.md](.azuredevops/pipeline-variables.example.md) before enabling deployment.

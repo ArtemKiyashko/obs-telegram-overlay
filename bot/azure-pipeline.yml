@@ -61,7 +61,7 @@ stages:
   - stage: DeployBot
     displayName: Deploy bot to Azure Function
     dependsOn: Validate
-    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['azureServiceConnection'], ''), ne(variables['resourceGroup'], ''), ne(variables['functionAppName'], ''))
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'), ne(variables['azureServiceConnection'], ''), ne(variables['resourceGroup'], ''))
     jobs:
       - deployment: DeployFunction
         displayName: Deploy function app package
@@ -96,12 +96,57 @@ stages:
                     archiveFile: $(botPackagePath)
                     replaceExistingArchive: true
 
+                - task: AzureCLI@2
+                  displayName: Resolve Function App name
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+
+                      overrideName='$(functionAppName)'
+                      if [[ "$overrideName" == '$(functionAppName)' ]]; then
+                        overrideName=''
+                      fi
+
+                      if [[ -n "$overrideName" ]]; then
+                        resolvedName="$overrideName"
+                        echo "Using functionAppName override: $resolvedName"
+                      else
+                        deploymentName=$(az deployment group list \
+                          --resource-group "$(resourceGroup)" \
+                          --query "[?properties.outputs.functionAppName.value!=null] | sort_by(@,&properties.timestamp)[-1].name" \
+                          -o tsv)
+
+                        if [[ -z "$deploymentName" ]]; then
+                          echo "ERROR: Could not find an infrastructure deployment with functionAppName output in resource group $(resourceGroup)."
+                          echo "Set variable functionAppName in obs-overlay-bot as override, or run infra pipeline first."
+                          exit 1
+                        fi
+
+                        resolvedName=$(az deployment group show \
+                          --resource-group "$(resourceGroup)" \
+                          --name "$deploymentName" \
+                          --query "properties.outputs.functionAppName.value" \
+                          -o tsv)
+
+                        if [[ -z "$resolvedName" ]]; then
+                          echo "ERROR: functionAppName output is empty in deployment $deploymentName."
+                          exit 1
+                        fi
+
+                        echo "Resolved function app from deployment $deploymentName: $resolvedName"
+                      fi
+
+                      echo "##vso[task.setvariable variable=resolvedFunctionAppName]$resolvedName"
+
                 - task: AzureFunctionApp@2
                   displayName: Deploy Azure Function
                   inputs:
                     azureSubscription: $(azureServiceConnection)
                     appType: functionAppLinux
-                    appName: $(functionAppName)
+                    appName: $(resolvedFunctionAppName)
                     package: $(botPackagePath)
                     runtimeStack: DOTNET-ISOLATED|8.0
 
@@ -116,17 +161,17 @@ stages:
 
                       settings=()
                       if [[ -n "$(telegramBotToken)" ]]; then
-                        settings+=("Bot:TelegramBotToken=$(telegramBotToken)")
+                        settings+=("Bot__TelegramBotToken=$(telegramBotToken)")
                       fi
 
                       if [[ -n "$(telegramManagementChatId)" ]]; then
-                        settings+=("Bot:TelegramManagementChatId=$(telegramManagementChatId)")
+                        settings+=("Bot__TelegramManagementChatId=$(telegramManagementChatId)")
                       fi
 
                       if [[ ${#settings[@]} -gt 0 ]]; then
                         az functionapp config appsettings set \
                           --resource-group "$(resourceGroup)" \
-                          --name "$(functionAppName)" \
+                          --name "$(resolvedFunctionAppName)" \
                           --settings "${settings[@]}"
                       else
                         echo "No optional Telegram settings provided. Skipping appsettings update."

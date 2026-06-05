@@ -12,8 +12,6 @@ Pipelines reference these Azure DevOps Variable Groups by name:
 
 - `obs-overlay-shared`
 - `obs-overlay-bot`
-- `obs-overlay-overlay`
-- `obs-overlay-infra`
 
 ## obs-overlay-shared
 
@@ -26,22 +24,24 @@ Required variables:
 
 For group `obs-overlay-bot` (used by `bot/azure-pipeline.yml`):
 
-- `functionAppName`: existing Function App name
+- `functionAppName`: optional override for Function App name
 - `telegramBotToken`: Telegram bot token (mark as secret, optional)
 - `telegramManagementChatId`: Telegram management chat id (optional)
 
+If `functionAppName` is not set, bot pipeline resolves it automatically from the latest infra deployment output `functionAppName` in the target resource group.
+
 ## Overlay deploy pipeline variables
 
-For group `obs-overlay-overlay` (used by `overlay/azure-pipeline.yml`):
+`overlay/azure-pipeline.yml` resolves `storageAccountName` automatically from the latest infra deployment output in the target resource group.
 
-- `storageAccountName`: existing Storage Account name with static website enabled
+Optional override:
+
+- `storageAccountName`: set as pipeline variable only when manual override is needed
 
 ## Infra deploy pipeline variables
 
-For group `obs-overlay-infra` (used by `infra/azure-pipeline.yml`):
-
-- `location`: Azure region (for example `westeurope`)
-- `bicepPrefix`: short resource prefix (for example `obstg`)
+`infra/azure-pipeline.yml` uses static `bicepPrefix: obstg` in YAML.
+If needed later, you can move it back to a variable group.
 
 Notes:
 

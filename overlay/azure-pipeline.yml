@@ -15,7 +15,6 @@ pr: none
 
 variables:
   - group: obs-overlay-shared
-  - group: obs-overlay-overlay
   - name: vmImage
     value: ubuntu-latest
   - name: nodeVersion
@@ -24,7 +23,7 @@ variables:
 stages:
   - stage: DeployOverlay
     displayName: Build and publish overlay assets
-    condition: and(succeeded(), ne(variables['azureServiceConnection'], ''), ne(variables['resourceGroup'], ''), ne(variables['storageAccountName'], ''))
+    condition: and(succeeded(), ne(variables['azureServiceConnection'], ''), ne(variables['resourceGroup'], ''))
     jobs:
       - deployment: PublishOverlayAssets
         displayName: Build overlay and upload static files
@@ -50,6 +49,51 @@ stages:
                   workingDirectory: overlay
 
                 - task: AzureCLI@2
+                  displayName: Resolve Storage Account name
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set -euo pipefail
+
+                      overrideName='$(storageAccountName)'
+                      if [[ "$overrideName" == '$(storageAccountName)' ]]; then
+                        overrideName=''
+                      fi
+
+                      if [[ -n "$overrideName" ]]; then
+                        resolvedName="$overrideName"
+                        echo "Using storageAccountName override: $resolvedName"
+                      else
+                        deploymentName=$(az deployment group list \
+                          --resource-group "$(resourceGroup)" \
+                          --query "[?properties.outputs.storageAccountName.value!=null] | sort_by(@,&properties.timestamp)[-1].name" \
+                          -o tsv)
+
+                        if [[ -z "$deploymentName" ]]; then
+                          echo "ERROR: Could not find an infrastructure deployment with storageAccountName output in resource group $(resourceGroup)."
+                          echo "Set variable storageAccountName as override, or run infra pipeline first."
+                          exit 1
+                        fi
+
+                        resolvedName=$(az deployment group show \
+                          --resource-group "$(resourceGroup)" \
+                          --name "$deploymentName" \
+                          --query "properties.outputs.storageAccountName.value" \
+                          -o tsv)
+
+                        if [[ -z "$resolvedName" ]]; then
+                          echo "ERROR: storageAccountName output is empty in deployment $deploymentName."
+                          exit 1
+                        fi
+
+                        echo "Resolved storage account from deployment $deploymentName: $resolvedName"
+                      fi
+
+                      echo "##vso[task.setvariable variable=resolvedStorageAccountName]$resolvedName"
+
+                - task: AzureCLI@2
                   displayName: Publish overlay assets
                   inputs:
                     azureSubscription: $(azureServiceConnection)
@@ -59,5 +103,5 @@ stages:
                       set -euo pipefail
 
                       chmod +x infra/enable-static-website.sh infra/publish-overlay-assets.sh
-                      ./infra/enable-static-website.sh "$(storageAccountName)" "$(resourceGroup)"
-                      ./infra/publish-overlay-assets.sh "$(storageAccountName)" "$(resourceGroup)"
+                      ./infra/enable-static-website.sh "$(resolvedStorageAccountName)" "$(resourceGroup)"
+                      ./infra/publish-overlay-assets.sh "$(resolvedStorageAccountName)" "$(resourceGroup)"
