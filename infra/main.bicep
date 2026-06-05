@@ -73,7 +73,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
   }
 }
 
-resource signalR 'Microsoft.SignalRService/signalR@2024-03-01-preview' = {
+resource signalR 'Microsoft.SignalRService/signalR@2024-03-01' = {
   name: signalRName
   location: location
   sku: {

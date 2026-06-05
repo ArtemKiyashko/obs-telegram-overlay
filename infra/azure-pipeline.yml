@@ -26,14 +26,14 @@ stages:
     condition: and(succeeded(), ne(variables['azureServiceConnection'], ''), ne(variables['resourceGroup'], ''))
     jobs:
       - job: ProvisionInfra
-        displayName: Run what-if and apply infrastructure changes
+        displayName: Preview and apply infrastructure changes
         pool:
           vmImage: $(vmImage)
         steps:
           - checkout: self
 
           - task: AzureCLI@2
-            displayName: Validate Bicep template
+            displayName: Validate and preview Bicep changes
             inputs:
               azureSubscription: $(azureServiceConnection)
               scriptType: bash
@@ -41,7 +41,15 @@ stages:
               inlineScript: |
                 set -euo pipefail
 
+                deploymentName="obs-telegram-overlay-$(Build.BuildId)"
+
                 az bicep build --file "$(infraTemplatePath)"
+
+                az deployment group what-if \
+                  --name "${deploymentName}" \
+                  --resource-group "$(resourceGroup)" \
+                  --template-file "$(infraTemplatePath)" \
+                  --parameters prefix="$(bicepPrefix)"
 
           - task: AzureCLI@2
             displayName: Apply Bicep deployment
