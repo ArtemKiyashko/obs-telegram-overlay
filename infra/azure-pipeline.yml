@@ -48,7 +48,7 @@ stages:
                   --name "${deploymentName}" \
                   --resource-group "$(resourceGroup)" \
                   --template-file "$(infraTemplatePath)" \
-                  prefix="$(bicepPrefix)"
+                  --parameters prefix="$(bicepPrefix)"
 
           - task: AzureCLI@2
             displayName: Apply Bicep deployment
@@ -64,5 +64,5 @@ stages:
                   --name "${deploymentName}" \
                   --resource-group "$(resourceGroup)" \
                   --template-file "$(infraTemplatePath)" \
-                  prefix="$(bicepPrefix)" \
+                  --parameters prefix="$(bicepPrefix)" \
                   --output table
