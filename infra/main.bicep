@@ -101,12 +101,14 @@ resource signalR 'Microsoft.SignalRService/signalR@2024-03-01' = {
 resource functionPlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: functionPlanName
   location: location
-  kind: 'functionapp'
+  kind: 'functionapp,linux'
   sku: {
     name: 'Y1'
     tier: 'Dynamic'
   }
-  properties: {}
+  properties: {
+    reserved: true
+  }
 }
 
 resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
