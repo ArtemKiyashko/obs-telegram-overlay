@@ -12,8 +12,6 @@ public sealed class BotOptions
 
     public string OverlayApiBaseUrl { get; init; } = string.Empty;
 
-    public string OverlayAssetsBasePath { get; init; } = "/overlay-assets";
-
     public string OverlayStaticContainer { get; init; } = "$web";
 
     public string OverlayControlContainer { get; init; } = "control";

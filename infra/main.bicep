@@ -151,10 +151,6 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'https://${functionAppName}.azurewebsites.net'
         }
         {
-          name: 'Bot__OverlayAssetsBasePath'
-          value: '/overlay-assets'
-        }
-        {
           name: 'Bot__OverlayStaticContainer'
           value: '$web'
         }

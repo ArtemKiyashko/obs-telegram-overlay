@@ -164,8 +164,16 @@ public sealed class OverlayRegistryService
         var indexBlob = container.GetBlobClient($"overlays/{record.OverlayId}/index.html");
         var configBlob = container.GetBlobClient($"overlays/{record.OverlayId}/config.json");
 
+        var templateBlob = container.GetBlobClient("overlay-assets/overlay-template.html");
+        if (!await templateBlob.ExistsAsync(cancellationToken))
+        {
+            throw new InvalidOperationException("overlay template is missing: $web/overlay-assets/overlay-template.html. Publish overlay assets first.");
+        }
+
+        var templateHtml = await templateBlob.DownloadContentAsync(cancellationToken);
+
         await indexBlob.UploadAsync(
-            BinaryData.FromString(BuildOverlayIndexHtml(record)),
+            templateHtml.Value.Content,
             new BlobUploadOptions
             {
                 HttpHeaders = new BlobHttpHeaders { ContentType = "text/html; charset=utf-8" }
@@ -246,29 +254,5 @@ public sealed class OverlayRegistryService
     {
         var baseUrl = _options.OverlayApiBaseUrl.TrimEnd('/');
         return $"{baseUrl}/api/overlay/{overlayId}/negotiate";
-    }
-
-    private string BuildOverlayIndexHtml(OverlayRecord record)
-    {
-        var siteTitle = WebUtility.HtmlEncode(_options.SiteTitle);
-        var assetsBasePath = _options.OverlayAssetsBasePath.TrimEnd('/');
-        var overlayId = WebUtility.HtmlEncode(record.OverlayId);
-
-        return $"""
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{siteTitle}</title>
-    <meta name="overlay-id" content="{overlayId}" />
-    <link rel="stylesheet" href="{assetsBasePath}/overlay.css" />
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="{assetsBasePath}/overlay.js"></script>
-  </body>
-</html>
-""";
     }
 }

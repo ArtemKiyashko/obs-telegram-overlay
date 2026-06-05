@@ -40,6 +40,14 @@ az storage blob upload \
   --account-name "$storage_account_name" \
   --auth-mode login \
   --container-name '$web' \
+  --name 'overlay-assets/overlay-template.html' \
+  --file "$repo_root/overlay/dist/overlay-template.html" \
+  --overwrite true
+
+az storage blob upload \
+  --account-name "$storage_account_name" \
+  --auth-mode login \
+  --container-name '$web' \
   --name '404.html' \
   --file "$repo_root/overlay/dist/index.html" \
   --overwrite true
