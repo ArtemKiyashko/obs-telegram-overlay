@@ -57,15 +57,11 @@ public static class OverlayHost
                 return Results.BadRequest(new { error = "Text is required." });
             }
 
-            app.Logger.LogInformation("Speech request: text={Text}, lang={Lang}", request.Text.Substring(0, Math.Min(50, request.Text.Length)), request.Lang);
             var result = await localSpeech.SynthesizeAsync(request.Text.Trim(), request.Lang.Trim(), ct);
             if (result is null)
             {
-                app.Logger.LogWarning("Speech synthesis returned null");
                 return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
             }
-
-            app.Logger.LogInformation("Speech endpoint returning {Bytes} bytes as {ContentType}", result.AudioBytes.Length, result.ContentType);
             return Results.File(result.AudioBytes, result.ContentType);
         });
 

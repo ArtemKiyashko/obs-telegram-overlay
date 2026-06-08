@@ -146,7 +146,6 @@ public sealed class LocalSpeechSynthesisService
             }
 
             var bytes = await File.ReadAllBytesAsync(outputPath, cancellationToken);
-            _logger.LogInformation("Generated audio blob: {Bytes} bytes, voice={Voice}, lang={Lang}", bytes.Length, voice, lang);
             return new SpeechSynthesisResult(bytes, "audio/wav");
         }
         catch (Exception ex)
@@ -201,7 +200,6 @@ public sealed class LocalSpeechSynthesisService
             }
 
             var bytes = await File.ReadAllBytesAsync(outputPath, cancellationToken);
-            _logger.LogInformation("Generated audio blob: {Bytes} bytes, voice={Voice}, lang={Lang}", bytes.Length, voice, lang);
             return new SpeechSynthesisResult(bytes, "audio/wav");
         }
         catch (Exception ex)
@@ -269,7 +267,6 @@ public sealed class LocalSpeechSynthesisService
             }
 
             var bytes = await File.ReadAllBytesAsync(outputPath, cancellationToken);
-            _logger.LogInformation("Generated audio blob: {Bytes} bytes, lang={Lang}", bytes.Length, lang);
             return new SpeechSynthesisResult(bytes, "audio/wav");
         }
         catch (Exception ex)
