@@ -5,5 +5,9 @@ public sealed record RuntimeOptions(
     string ListenUrl,
     string? OverlayTemplatePath,
     int HistoryLimit,
-    int MessageTtlSeconds
+    int MessageTtlSeconds,
+    bool SpeechEnabled,
+    string SpeechEngine,
+    string SpeechLang,
+    string SpeechLangMode
 );

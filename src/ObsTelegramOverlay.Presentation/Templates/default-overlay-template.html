@@ -19,6 +19,31 @@
         display: grid;
         gap: 10px;
       }
+      .audio-unlock {
+        display: none;
+        position: fixed;
+        left: 20px;
+        bottom: 20px;
+        z-index: 1000;
+        background: rgba(15, 23, 42, 0.86);
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.35;
+      }
+      .audio-unlock.visible {
+        display: block;
+      }
+      .audio-unlock button {
+        margin-top: 8px;
+        border: 0;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      }
       .message {
         backdrop-filter: blur(6px);
         background: rgba(15, 23, 42, 0.72);
@@ -53,6 +78,11 @@
     <main class="shell">
       <section id="messages" class="messages"></section>
     </main>
+    <aside id="audio-unlock" class="audio-unlock" aria-live="polite">
+      <div>Audio is blocked by autoplay policy.</div>
+      <div>In OBS: right click Browser Source -> Interact -> click button once.</div>
+      <button id="audio-unlock-button" type="button">Enable Audio</button>
+    </aside>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script>
@@ -61,6 +91,14 @@
       const overlaySettings = window.__overlaySettings || {};
       const messageTtlMs = Math.max(1000, Number(overlaySettings.messageTtlSeconds || 10) * 1000);
       const fadeDurationMs = 600;
+      const speechEngine = (overlaySettings.speechEngine || 'none').toLowerCase();
+      const speechLang = overlaySettings.speechLang || 'ru-RU';
+      const speechLangMode = (overlaySettings.speechLangMode || 'fixed').toLowerCase();
+      const audioUnlockRoot = document.getElementById('audio-unlock');
+      const audioUnlockButton = document.getElementById('audio-unlock-button');
+      let speechQueue = Promise.resolve();
+      let pendingSpeechBlobs = [];
+      let audioUnlocked = speechEngine !== 'local';
 
       const renderClock = (isoDate) => {
         const date = new Date(isoDate);
@@ -102,6 +140,135 @@
         }
       };
 
+      const speakMessage = (msg) => {
+        if (speechEngine === 'none') {
+          return;
+        }
+
+        const text = (msg.text || '').trim();
+        if (!text) {
+          return;
+        }
+
+        const lang = resolveSpeechLang(text);
+
+        if (speechEngine === 'local') {
+          enqueueSpeech(async () => {
+            const response = await fetch('/api/speech', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text, lang })
+            });
+
+            if (!response.ok) {
+              console.warn('Local speech request failed', response.status);
+              return;
+            }
+
+            const blob = await response.blob();
+            console.log(`Speech blob received: ${blob.size} bytes, type=${blob.type}`);
+            if (blob.size === 0) {
+              console.error('Speech blob is empty');
+              return;
+            }
+            await playAudioBlob(blob);
+          });
+          return;
+        }
+
+        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+          return;
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      const resolveSpeechLang = (text) => {
+        if (speechLangMode === 'auto') {
+          return /[\u0400-\u04FF]/.test(text) ? 'ru-RU' : 'en-US';
+        }
+
+        return speechLang;
+      };
+
+      const enqueueSpeech = (task) => {
+        speechQueue = speechQueue
+          .then(task)
+          .catch((error) => {
+            console.error('Speech queue error', error);
+          });
+      };
+
+      const showAudioUnlockPrompt = () => {
+        if (audioUnlockRoot) {
+          audioUnlockRoot.classList.add('visible');
+        }
+      };
+
+      const hideAudioUnlockPrompt = () => {
+        if (audioUnlockRoot) {
+          audioUnlockRoot.classList.remove('visible');
+        }
+      };
+
+      const flushPendingSpeech = () => {
+        if (!pendingSpeechBlobs.length) {
+          return;
+        }
+
+        const queued = pendingSpeechBlobs;
+        pendingSpeechBlobs = [];
+
+        queued.forEach((blob) => {
+          enqueueSpeech(() => playAudioBlob(blob));
+        });
+      };
+
+      const unlockAudio = () => {
+        audioUnlocked = true;
+        hideAudioUnlockPrompt();
+        flushPendingSpeech();
+      };
+
+      if (audioUnlockButton) {
+        audioUnlockButton.addEventListener('click', unlockAudio);
+      }
+
+      const playAudioBlob = async (blob) => {
+        if (speechEngine === 'local' && !audioUnlocked) {
+          pendingSpeechBlobs.push(blob);
+          showAudioUnlockPrompt();
+          return;
+        }
+
+        const audioUrl = URL.createObjectURL(blob);
+
+        try {
+          const audio = new Audio(audioUrl);
+          try {
+            await audio.play();
+          } catch (error) {
+            if (error && error.name === 'NotAllowedError') {
+              audioUnlocked = false;
+              pendingSpeechBlobs.push(blob);
+              showAudioUnlockPrompt();
+              return;
+            }
+
+            throw error;
+          }
+
+          await new Promise((resolve) => {
+            audio.onended = resolve;
+            audio.onerror = resolve;
+          });
+        } finally {
+          URL.revokeObjectURL(audioUrl);
+        }
+      };
+
       const queueFadeOut = (card) => {
         setTimeout(() => {
           card.classList.add('fade-out');
@@ -122,7 +289,10 @@
         (items || []).forEach(addMessage);
       });
 
-      connection.on('overlay-message', addMessage);
+      connection.on('overlay-message', (msg) => {
+        addMessage(msg);
+        speakMessage(msg);
+      });
 
       connection.start().catch((error) => {
         console.error('SignalR connection failed', error);
