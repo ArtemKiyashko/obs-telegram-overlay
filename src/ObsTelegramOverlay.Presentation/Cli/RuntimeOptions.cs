@@ -4,5 +4,6 @@ public sealed record RuntimeOptions(
     string BotApiToken,
     string ListenUrl,
     string? OverlayTemplatePath,
-    int HistoryLimit
+    int HistoryLimit,
+    int MessageTtlSeconds
 );

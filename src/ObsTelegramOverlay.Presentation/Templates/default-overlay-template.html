@@ -25,6 +25,13 @@
         border: 1px solid rgba(148, 163, 184, 0.35);
         border-radius: 12px;
         padding: 10px 12px;
+        opacity: 1;
+        transform: translateY(0);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+      .message.fade-out {
+        opacity: 0;
+        transform: translateY(-4px);
       }
       .meta {
         display: flex;
@@ -51,6 +58,9 @@
     <script>
       const maxMessages = 20;
       const messagesRoot = document.getElementById('messages');
+      const overlaySettings = window.__overlaySettings || {};
+      const messageTtlMs = Math.max(1000, Number(overlaySettings.messageTtlSeconds || 10) * 1000);
+      const fadeDurationMs = 600;
 
       const renderClock = (isoDate) => {
         const date = new Date(isoDate);
@@ -85,9 +95,20 @@
         card.appendChild(text);
 
         messagesRoot.prepend(card);
+        queueFadeOut(card);
+
         while (messagesRoot.children.length > maxMessages) {
           messagesRoot.removeChild(messagesRoot.lastChild);
         }
+      };
+
+      const queueFadeOut = (card) => {
+        setTimeout(() => {
+          card.classList.add('fade-out');
+          setTimeout(() => {
+            card.remove();
+          }, fadeDurationMs);
+        }, messageTtlMs);
       };
 
       const hubUrl = `${window.location.origin}/hubs/overlay`;

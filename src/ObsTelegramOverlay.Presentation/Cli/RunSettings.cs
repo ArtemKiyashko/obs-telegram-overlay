@@ -18,4 +18,8 @@ public sealed class RunSettings : CommandSettings
     [CommandOption("--history-limit <COUNT>")]
     [DefaultValue(100)]
     public int HistoryLimit { get; init; } = 100;
+
+    [CommandOption("--message-ttl-seconds <SECONDS>")]
+    [DefaultValue(10)]
+    public int MessageTtlSeconds { get; init; } = 10;
 }

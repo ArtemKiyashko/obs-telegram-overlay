@@ -14,6 +14,12 @@ public sealed class RunCommand : AsyncCommand<RunSettings>
             return 2;
         }
 
+        if (settings.MessageTtlSeconds <= 0)
+        {
+            AnsiConsole.MarkupLine("[red]--message-ttl-seconds must be greater than 0.[/]");
+            return 2;
+        }
+
         var botApiToken = settings.BotApiToken;
         if (string.IsNullOrWhiteSpace(botApiToken))
         {
@@ -34,7 +40,8 @@ public sealed class RunCommand : AsyncCommand<RunSettings>
             BotApiToken: botApiToken.Trim(),
             ListenUrl: settings.ListenUrl.Trim(),
             OverlayTemplatePath: overlayTemplatePath,
-            HistoryLimit: settings.HistoryLimit);
+            HistoryLimit: settings.HistoryLimit,
+            MessageTtlSeconds: settings.MessageTtlSeconds);
 
         using var shutdown = new CancellationTokenSource();
         Console.CancelKeyPress += (_, eventArgs) =>

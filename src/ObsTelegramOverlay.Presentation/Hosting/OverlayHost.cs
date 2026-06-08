@@ -30,6 +30,7 @@ public static class OverlayHost
         app.MapGet("/", async (OverlayTemplateProvider templateProvider, CancellationToken ct) =>
         {
             var html = await templateProvider.GetOverlayHtmlAsync(options.OverlayTemplatePath, ct);
+            html = InjectOverlaySettings(html, options.MessageTtlSeconds);
             return Results.Content(html, "text/html; charset=utf-8");
         });
 
@@ -40,5 +41,18 @@ public static class OverlayHost
         AnsiConsole.MarkupLine("[grey]Press Ctrl+C to stop.[/]");
 
         await app.RunAsync(cancellationToken);
+    }
+
+    private static string InjectOverlaySettings(string html, int messageTtlSeconds)
+    {
+        var settingsScript = $"<script>window.__overlaySettings = {{ messageTtlSeconds: {messageTtlSeconds} }};</script>";
+
+        var headCloseIndex = html.IndexOf("</head>", StringComparison.OrdinalIgnoreCase);
+        if (headCloseIndex >= 0)
+        {
+            return html.Insert(headCloseIndex, settingsScript);
+        }
+
+        return settingsScript + html;
     }
 }
