@@ -1,13 +1,7 @@
 {
   "folders": [
     {
-      "path": "bot"
-    },
-    {
-      "path": "overlay"
-    },
-    {
-      "path": "infra"
+      "path": "."
     }
   ],
   "settings": {

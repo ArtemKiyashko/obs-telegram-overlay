@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Telegram OBS Overlay</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        color: #eef2ff;
+        background: transparent !important;
+      }
+      .shell {
+        padding: 20px;
+      }
+      .messages {
+        display: grid;
+        gap: 10px;
+      }
+      .message {
+        backdrop-filter: blur(6px);
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      .meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        opacity: 0.82;
+        margin-bottom: 6px;
+      }
+      .sender {
+        font-weight: 700;
+      }
+      .text {
+        white-space: pre-wrap;
+        line-height: 1.35;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section id="messages" class="messages"></section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+      const maxMessages = 20;
+      const messagesRoot = document.getElementById('messages');
+
+      const renderClock = (isoDate) => {
+        const date = new Date(isoDate);
+        if (Number.isNaN(date.getTime())) {
+          return '';
+        }
+        return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date);
+      };
+
+      const addMessage = (msg) => {
+        const card = document.createElement('article');
+        card.className = 'message';
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+
+        const sender = document.createElement('span');
+        sender.className = 'sender';
+        sender.textContent = msg.sender || 'Unknown';
+
+        const clock = document.createElement('span');
+        clock.textContent = renderClock(msg.sentUtc);
+
+        meta.appendChild(sender);
+        meta.appendChild(clock);
+
+        const text = document.createElement('div');
+        text.className = 'text';
+        text.textContent = msg.text || '';
+
+        card.appendChild(meta);
+        card.appendChild(text);
+
+        messagesRoot.prepend(card);
+        while (messagesRoot.children.length > maxMessages) {
+          messagesRoot.removeChild(messagesRoot.lastChild);
+        }
+      };
+
+      const hubUrl = `${window.location.origin}/hubs/overlay`;
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl(hubUrl)
+        .withAutomaticReconnect()
+        .build();
+
+      connection.on('overlay-snapshot', (items) => {
+        messagesRoot.innerHTML = '';
+        (items || []).forEach(addMessage);
+      });
+
+      connection.on('overlay-message', addMessage);
+
+      connection.start().catch((error) => {
+        console.error('SignalR connection failed', error);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ObsTelegramOverlay.Application/ObsTelegramOverlay.Application.csproj" />
+    <Project Path="src/ObsTelegramOverlay.Infrastructure/ObsTelegramOverlay.Infrastructure.csproj" />
+    <Project Path="src/ObsTelegramOverlay.Presentation/ObsTelegramOverlay.Presentation.csproj" />
+  </Folder>
+</Solution>
