@@ -76,6 +76,7 @@ Download the `.exe` from [Releases](../../releases) — no installation needed.
 The app will:
 - Print the overlay URL: `http://127.0.0.1:5180`
 - Wait for Telegram messages
+- Show each message with the sender name and `chatId`
 
 ### 4. Add to OBS
 
@@ -94,6 +95,30 @@ When your first Telegram message arrives:
 
 > **Why?** OBS Browser Source requires explicit user interaction before auto-playing audio (browser security policy).
 
+### 6. Restrict the bot to specific chats
+
+By default, the bot accepts messages from any chat where it was added.
+If you want to allow only specific Telegram chats, use `--allowed-chat-ids`.
+
+How to find the right `chatId`:
+
+1. Start the app without any chat filter
+2. Send a test message from the chat you want to use
+3. Look at the overlay: the `chatId` is shown next to the sender name
+4. Restart the app with that `chatId`
+
+Example:
+
+```bash
+./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN --allowed-chat-ids -1001234567890
+```
+
+Multiple chats are supported as a comma-separated list:
+
+```bash
+./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN --allowed-chat-ids -1001234567890,-1009876543210
+```
+
 ## Message Behavior
 
 - **Display time**: 10 seconds (configurable)
@@ -109,6 +134,7 @@ All options have sensible defaults. You only need `--bot-api-token`. But if you 
 ./obstelegramoverlay_bot \
   --bot-api-token YOUR_TOKEN \
   --listen-url http://127.0.0.1:5180 \
+  --allowed-chat-ids -1001234567890 \
   --message-ttl-seconds 15 \
   --speech-lang ru-RU \
   --speech-lang-mode fixed
@@ -121,6 +147,7 @@ All options have sensible defaults. You only need `--bot-api-token`. But if you 
 | `--bot-api-token` | *(required)* | Telegram Bot API token |
 | `--listen-url` | `http://127.0.0.1:5180` | Web server address |
 | `--message-ttl-seconds` | `10` | How long to display each message |
+| `--allowed-chat-ids` | *(all chats)* | Comma-separated list of allowed Telegram chat IDs |
 | `--speech-engine` | `local` | `local` or `browser` |
 | `--speech-lang` | `ru-RU` | Default language for speech (`ru-RU`, `en-US`) |
 | `--speech-lang-mode` | `auto` | `auto` (detect Cyrillic) or `fixed` (always use default) |

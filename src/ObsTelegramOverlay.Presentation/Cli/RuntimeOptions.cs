@@ -6,6 +6,7 @@ public sealed record RuntimeOptions(
     string? OverlayTemplatePath,
     int HistoryLimit,
     int MessageTtlSeconds,
+    IReadOnlySet<long> AllowedChatIds,
     bool SpeechEnabled,
     string SpeechEngine,
     string SpeechLang,

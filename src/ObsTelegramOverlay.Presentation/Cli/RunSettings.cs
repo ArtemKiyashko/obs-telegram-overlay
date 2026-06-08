@@ -23,6 +23,10 @@ public sealed class RunSettings : CommandSettings
     [DefaultValue(10)]
     public int MessageTtlSeconds { get; init; } = 10;
 
+    [Description("Comma-separated list of allowed Telegram chat IDs. If omitted, messages from all chats are accepted.")]
+    [CommandOption("--allowed-chat-ids <IDS>")]
+    public string? AllowedChatIds { get; init; }
+
     [Description("Legacy compatibility switch. Speech stays enabled, engine selection still follows --speech-engine.")]
     [CommandOption("--speech-enabled")]
     [DefaultValue(false)]

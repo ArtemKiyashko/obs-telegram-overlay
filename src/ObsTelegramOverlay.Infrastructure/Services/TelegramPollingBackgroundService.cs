@@ -14,15 +14,18 @@ public sealed class TelegramPollingBackgroundService : BackgroundService
 
     private readonly ITelegramBotClient _botClient;
     private readonly IOverlayMessagePublisher _publisher;
+    private readonly IReadOnlySet<long> _allowedChatIds;
     private readonly ILogger<TelegramPollingBackgroundService> _logger;
 
     public TelegramPollingBackgroundService(
         ITelegramBotClient botClient,
         IOverlayMessagePublisher publisher,
+        IReadOnlySet<long> allowedChatIds,
         ILogger<TelegramPollingBackgroundService> logger)
     {
         _botClient = botClient;
         _publisher = publisher;
+        _allowedChatIds = allowedChatIds;
         _logger = logger;
     }
 
@@ -30,6 +33,11 @@ public sealed class TelegramPollingBackgroundService : BackgroundService
     {
         var me = await _botClient.GetMe(stoppingToken);
         _logger.LogInformation("Telegram polling started as @{Username}", me.Username);
+
+        if (_allowedChatIds.Count > 0)
+        {
+            _logger.LogInformation("Telegram chat filter enabled for {Count} chat(s): {ChatIds}", _allowedChatIds.Count, string.Join(", ", _allowedChatIds));
+        }
 
         var offset = 0;
 
@@ -67,6 +75,11 @@ public sealed class TelegramPollingBackgroundService : BackgroundService
     {
         var message = update.Message;
         if (message is null || message.Type != MessageType.Text || string.IsNullOrWhiteSpace(message.Text))
+        {
+            return;
+        }
+
+        if (_allowedChatIds.Count > 0 && !_allowedChatIds.Contains(message.Chat.Id))
         {
             return;
         }

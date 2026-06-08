@@ -25,7 +25,7 @@ public static class OverlayHost
         builder.Services.AddSingleton<OverlayTemplateProvider>();
         builder.Services.AddSingleton<LocalSpeechSynthesisService>();
         builder.Services.AddSingleton<IOverlayMessagePublisher, SignalrOverlayMessagePublisher>();
-        builder.Services.AddTelegramPolling(options.BotApiToken);
+        builder.Services.AddTelegramPolling(options.BotApiToken, options.AllowedChatIds);
 
         var app = builder.Build();
         var localSpeech = app.Services.GetRequiredService<LocalSpeechSynthesisService>();

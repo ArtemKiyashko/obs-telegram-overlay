@@ -26,6 +26,12 @@ public sealed class RunCommand : AsyncCommand<RunSettings>
             return 2;
         }
 
+        if (!TryParseAllowedChatIds(settings.AllowedChatIds, out var allowedChatIds))
+        {
+            AnsiConsole.MarkupLine("[red]--allowed-chat-ids must be a comma-separated list of integer Telegram chat IDs.[/]");
+            return 2;
+        }
+
         var speechEngine = settings.SpeechEngine.Trim().ToLowerInvariant();
 
         if (speechEngine is not ("browser" or "local"))
@@ -63,6 +69,7 @@ public sealed class RunCommand : AsyncCommand<RunSettings>
             OverlayTemplatePath: overlayTemplatePath,
             HistoryLimit: settings.HistoryLimit,
             MessageTtlSeconds: settings.MessageTtlSeconds,
+            AllowedChatIds: allowedChatIds,
             SpeechEnabled: settings.SpeechEnabled,
             SpeechEngine: speechEngine,
             SpeechLang: settings.SpeechLang.Trim(),
@@ -79,5 +86,29 @@ public sealed class RunCommand : AsyncCommand<RunSettings>
 
         await OverlayHost.RunAsync(runtimeOptions, linked.Token);
         return 0;
+    }
+
+    private static bool TryParseAllowedChatIds(string? rawValue, out IReadOnlySet<long> allowedChatIds)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            allowedChatIds = new HashSet<long>();
+            return true;
+        }
+
+        var ids = new HashSet<long>();
+        foreach (var part in rawValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!long.TryParse(part, out var chatId))
+            {
+                allowedChatIds = new HashSet<long>();
+                return false;
+            }
+
+            ids.Add(chatId);
+        }
+
+        allowedChatIds = ids;
+        return true;
     }
 }

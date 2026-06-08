@@ -108,6 +108,15 @@
         return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date);
       };
 
+      const renderSender = (msg) => {
+        const sender = msg.sender || 'Unknown';
+        if (typeof msg.chatId !== 'number') {
+          return sender;
+        }
+
+        return `${sender} · ${msg.chatId}`;
+      };
+
       const addMessage = (msg) => {
         const card = document.createElement('article');
         card.className = 'message';
@@ -117,7 +126,7 @@
 
         const sender = document.createElement('span');
         sender.className = 'sender';
-        sender.textContent = msg.sender || 'Unknown';
+  sender.textContent = renderSender(msg);
 
         const clock = document.createElement('span');
         clock.textContent = renderClock(msg.sentUtc);
