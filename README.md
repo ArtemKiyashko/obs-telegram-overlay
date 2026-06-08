@@ -1,0 +1,156 @@
+# OBS Telegram Overlay
+
+Display live Telegram messages as a transparent overlay in OBS with automatic text-to-speech narration.
+
+Perfect for:
+- Stream alerts from Telegram channel/group
+- Live chat overlay with voice narration
+- Multi-language support (English, Russian, extensible)
+- Clean, glassmorphism design that fits any stream
+
+## Demo
+
+![OBS Telegram Overlay Demo](obs_tg_demo.mp4)
+
+## Features
+
+✨ **Real-time messaging** — Messages appear instantly via SignalR  
+🎤 **Local text-to-speech** — Server-side audio generation (macOS/Linux/Windows)  
+🎨 **Transparent overlay** — Glassmorphism cards with fade-out animation  
+🌐 **Auto language detection** — Detects Cyrillic → Russian, else English  
+📱 **OBS-friendly** — Works seamlessly in OBS Browser Source  
+🔒 **Self-contained** — Single portable executable, no dependencies  
+
+## Installation
+
+### macOS / Linux
+
+1. Download the latest release for your platform from [Releases](../../releases)
+2. Make it executable:
+   ```bash
+   chmod +x obstelegramoverlay_bot
+   ```
+
+### Windows
+
+Download the `.exe` from [Releases](../../releases) — no installation needed.
+
+## Quick Start
+
+### 1. Get Your Bot Token
+
+1. Open Telegram and chat with [@BotFather](https://t.me/botfather)
+2. Send `/newbot` and follow instructions
+3. Copy the API token (looks like `123456:ABC-DEF...`)
+
+### 2. Add Bot to Chat/Channel
+
+1. Open your Telegram group or channel
+2. Click the group name → Add Members
+3. Search for your bot and add it
+
+### 3. Run the Overlay
+
+```bash
+./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN_HERE
+```
+
+The app will:
+- Print the overlay URL: `http://127.0.0.1:5180`
+- Wait for Telegram messages
+
+### 4. Add to OBS
+
+1. In OBS, create a new **Browser Source**
+2. Set URL to `http://127.0.0.1:5180`
+3. Set resolution: **1920×1080** (or your stream resolution)
+4. ✅ Messages will start appearing!
+
+### 5. First Message (Audio Unlock)
+
+When your first Telegram message arrives:
+- A button will appear: **"Enable Audio"**
+- **Right-click** the OBS Browser Source → **Interact**
+- **Click** the button once
+- Audio will then play automatically for all future messages
+
+> **Why?** OBS Browser Source requires explicit user interaction before auto-playing audio (browser security policy).
+
+## Message Behavior
+
+- **Display time**: 10 seconds (configurable)
+- **Fade-out**: 600ms smooth transition
+- **Max shown**: 20 messages on screen
+- **Auto-removal**: Old messages clear automatically
+
+## Advanced Options
+
+All options have sensible defaults. You only need `--bot-api-token`. But if you want to customize:
+
+```bash
+./obstelegramoverlay_bot \
+  --bot-api-token YOUR_TOKEN \
+  --listen-url http://127.0.0.1:5180 \
+  --message-ttl-seconds 15 \
+  --speech-lang ru-RU \
+  --speech-lang-mode fixed
+```
+
+**Available options:**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--bot-api-token` | *(required)* | Telegram Bot API token |
+| `--listen-url` | `http://127.0.0.1:5180` | Web server address |
+| `--message-ttl-seconds` | `10` | How long to display each message |
+| `--speech-engine` | `local` | `local` or `browser` |
+| `--speech-lang` | `ru-RU` | Default language for speech (`ru-RU`, `en-US`) |
+| `--speech-lang-mode` | `auto` | `auto` (detect Cyrillic) or `fixed` (always use default) |
+| `--history-limit` | `100` | Max messages to keep in history |
+
+## Keyboard Shortcuts
+
+- **Ctrl+C** — Stop the app
+
+## Troubleshooting
+
+### Messages aren't appearing
+
+- Check the bot token is correct
+- Verify the bot is added to your Telegram chat/channel
+- Try sending a test message in that chat
+
+### No audio
+
+- First message: Right-click OBS Browser Source → **Interact** → Click "Enable Audio" button
+- OBS mixer: Check "Control audio via OBS" is enabled
+- Levels: Look for green audio level indicators when messages arrive
+
+### Wrong language
+
+- Use `--speech-lang-mode fixed --speech-lang en-US` for English
+- Or let auto-detection work (detects Russian by Cyrillic characters)
+
+### Browser source shows blank
+
+- Check URL: `http://127.0.0.1:5180`
+- Ensure the app is running (look for "Overlay server started" message)
+- Refresh the browser source (right-click → Refresh)
+
+## Requirements
+
+- **Telegram Bot** (free, create with [@BotFather](https://t.me/botfather))
+- **macOS**: Built-in `say` command (always available)
+- **Linux**: `espeak-ng` (`apt install espeak-ng` on Ubuntu/Debian)
+- **Windows**: Built-in (no extra install needed)
+- **OBS**: v28+ recommended
+
+## License
+
+MIT — Feel free to use, modify, and share!
+
+---
+
+**Questions?** Check the [Issues](../../issues) or create a new one.
+
+Made with ❤️ for streamers who use Telegram.
