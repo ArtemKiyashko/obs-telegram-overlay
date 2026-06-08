@@ -3,7 +3,11 @@ name: release
 on:
   push:
     tags:
-      - "v1.*.*"
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -11,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        rid: [linux-x64, win-x64, osx-x64]
+        rid: [linux-x64, win-x64, osx-arm64]
 
     steps:
       - name: Checkout
@@ -41,3 +45,32 @@ jobs:
         with:
           name: obs-telegram-overlay-${{ matrix.rid }}
           path: artifacts/${{ matrix.rid }}
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Archive artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-bundles
+
+          for rid in linux-x64 osx-arm64; do
+            src="release-artifacts/obs-telegram-overlay-${rid}"
+            tar -C "$src" -czf "release-bundles/obs-telegram-overlay-${GITHUB_REF_NAME}-${rid}.tar.gz" .
+          done
+
+          src="release-artifacts/obs-telegram-overlay-win-x64"
+          (cd "$src" && zip -r "../../release-bundles/obs-telegram-overlay-${GITHUB_REF_NAME}-win-x64.zip" .)
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-bundles/*

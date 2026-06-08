@@ -10,7 +10,7 @@ Perfect for:
 
 ## Demo
 
-![OBS Telegram Overlay Demo](obs_tg_demo.mp4)
+![OBS Telegram Overlay Demo](obs_tg_demo.gif)
 
 ## Features
 
