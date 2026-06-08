@@ -31,6 +31,24 @@ Perfect for:
    chmod +x obstelegramoverlay_bot
    ```
 
+#### macOS first run (Apple security warning)
+
+On the first launch, macOS may show a warning like:
+"Apple cannot check this app for malicious software" and suggest moving it to Trash.
+
+If that happens:
+
+1. Close the warning dialog (do not delete the file)
+2. Open **System Settings** → **Privacy & Security**
+3. Scroll down to the security section with the blocked app message
+4. Click **Open Anyway**
+5. Start the app again
+6. In the next confirmation dialog, click **Open Anyway**
+7. Enter your admin password when prompted
+
+After this one-time approval, the binary runs normally.
+You usually only need to repeat these steps after downloading a new version.
+
 ### Windows
 
 Download the `.exe` from [Releases](../../releases) — no installation needed.
