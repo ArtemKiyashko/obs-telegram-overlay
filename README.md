@@ -61,13 +61,25 @@ Download the `.exe` from [Releases](../../releases) — no installation needed.
 2. Send `/newbot` and follow instructions
 3. Copy the API token (looks like `123456:ABC-DEF...`)
 
-### 2. Add Bot to Chat/Channel
+### 2. Configure Bot Privacy (BotFather)
+
+Before adding the bot to a group, configure it in [@BotFather](https://t.me/botfather):
+
+1. Send `/mybots` → select your bot → **Bot Settings** → **Group Privacy**
+2. Set it to **Disabled** (so the bot receives all group messages, not just commands)
+
+> **Why?** By default Telegram only delivers messages that start with `/` to bots in groups. Disabling Group Privacy allows the bot to see every message.
+
+### 3. Add Bot to Chat/Channel
 
 1. Open your Telegram group or channel
 2. Click the group name → Add Members
 3. Search for your bot and add it
 
-### 3. Run the Overlay
+> **Supergroups**: If your chat is a supergroup, the bot must be promoted to **admin**.
+> No specific permissions are required — you can uncheck everything — but admin status is necessary for Telegram to forward all messages to the bot.
+
+### 4. Run the Overlay
 
 ```bash
 ./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN_HERE
@@ -78,14 +90,14 @@ The app will:
 - Wait for Telegram messages
 - Show each message with the sender name and `chatId`
 
-### 4. Add to OBS
+### 5. Add to OBS
 
 1. In OBS, create a new **Browser Source**
 2. Set URL to `http://127.0.0.1:5180`
 3. Set resolution: **1920×1080** (or your stream resolution)
 4. ✅ Messages will start appearing!
 
-### 5. First Message (Audio Unlock)
+### 6. First Message (Audio Unlock)
 
 When your first Telegram message arrives:
 - A button will appear: **"Enable Audio"**
@@ -95,7 +107,7 @@ When your first Telegram message arrives:
 
 > **Why?** OBS Browser Source requires explicit user interaction before auto-playing audio (browser security policy).
 
-### 6. Restrict the bot to specific chats
+### 7. Restrict the bot to specific chats
 
 By default, the bot accepts messages from any chat where it was added.
 If you want to allow only specific Telegram chats, use `--allowed-chat-ids`.
@@ -163,6 +175,8 @@ All options have sensible defaults. You only need `--bot-api-token`. But if you 
 
 - Check the bot token is correct
 - Verify the bot is added to your Telegram chat/channel
+- **Supergroup**: make sure the bot is promoted to admin (permissions can all be unchecked)
+- **Group Privacy**: ensure it is set to **Disabled** in BotFather → Bot Settings → Group Privacy
 - Try sending a test message in that chat
 
 ### No audio

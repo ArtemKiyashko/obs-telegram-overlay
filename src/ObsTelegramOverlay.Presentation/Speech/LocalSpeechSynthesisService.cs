@@ -172,7 +172,7 @@ public sealed class LocalSpeechSynthesisService
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = "espeak-ng",
-                ArgumentList = { "-v", voice, "-w", outputPath, text },
+                ArgumentList = { "-v", voice, "-s", "130", "-w", outputPath, text },
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
