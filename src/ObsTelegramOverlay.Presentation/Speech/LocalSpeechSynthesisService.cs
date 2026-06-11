@@ -166,7 +166,7 @@ public sealed class LocalSpeechSynthesisService
     private async Task<SpeechSynthesisResult?> SynthesizeOnLinuxAsync(string text, string lang, CancellationToken cancellationToken)
     {
         var outputPath = Path.Combine(Path.GetTempPath(), $"obstelegramoverlay-{Guid.NewGuid():N}.wav");
-        var voice = lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "ru+f3" : "en-us+f3";
+        var voice = lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "ru" : "en-us";
         var normalizedText = NormalizeLinuxSpeechText(text);
 
         try
@@ -178,9 +178,9 @@ public sealed class LocalSpeechSynthesisService
                 {
                     "-b", "1", // Force UTF-8 input decoding
                     "-v", voice,
-                    "-s", "115", // Slower, more understandable rate
-                    "-p", "45", // Slightly higher pitch for clearer consonants
-                    "-g", "8", // Extra word gap improves intelligibility
+                    "-s", "120", // Slightly faster than 115 but still readable
+                    "-p", "28", // Lower pitch to avoid squeaky voice
+                    "-g", "5", // Moderate word gap without robotic pauses
                     "-w", outputPath,
                     normalizedText
                 },
