@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace ObsTelegramOverlay.Presentation.Speech;
@@ -165,14 +166,24 @@ public sealed class LocalSpeechSynthesisService
     private async Task<SpeechSynthesisResult?> SynthesizeOnLinuxAsync(string text, string lang, CancellationToken cancellationToken)
     {
         var outputPath = Path.Combine(Path.GetTempPath(), $"obstelegramoverlay-{Guid.NewGuid():N}.wav");
-        var voice = lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "ru" : "en";
+        var voice = lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "ru+f3" : "en-us+f3";
+        var normalizedText = NormalizeLinuxSpeechText(text);
 
         try
         {
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = "espeak-ng",
-                ArgumentList = { "-v", voice, "-s", "130", "-w", outputPath, text },
+                ArgumentList =
+                {
+                    "-b", "1", // Force UTF-8 input decoding
+                    "-v", voice,
+                    "-s", "115", // Slower, more understandable rate
+                    "-p", "45", // Slightly higher pitch for clearer consonants
+                    "-g", "8", // Extra word gap improves intelligibility
+                    "-w", outputPath,
+                    normalizedText
+                },
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -214,6 +225,15 @@ public sealed class LocalSpeechSynthesisService
                 File.Delete(outputPath);
             }
         }
+    }
+
+    private static string NormalizeLinuxSpeechText(string text)
+    {
+        var normalized = text.Trim();
+        normalized = Regex.Replace(normalized, @"https?://\S+", " ссылка ", RegexOptions.IgnoreCase);
+        normalized = Regex.Replace(normalized, @"\s+", " ");
+
+        return string.IsNullOrWhiteSpace(normalized) ? text : normalized;
     }
 
     private async Task<SpeechSynthesisResult?> SynthesizeOnWindowsAsync(string text, string lang, CancellationToken cancellationToken)
