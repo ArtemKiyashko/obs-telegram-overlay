@@ -160,7 +160,7 @@ All options have sensible defaults. You only need `--bot-api-token`. But if you 
 | `--listen-url` | `http://127.0.0.1:5180` | Web server address |
 | `--message-ttl-seconds` | `10` | How long to display each message |
 | `--allowed-chat-ids` | *(all chats)* | Comma-separated list of allowed Telegram chat IDs |
-| `--speech-engine` | `local` | `local` or `browser` |
+| `--speech-engine` | `local` | `local` (native TTS), `piper` (offline neural, Linux only), `edge-tts` (online neural, Linux only) |
 | `--speech-lang` | `ru-RU` | Default language for speech (`ru-RU`, `en-US`) |
 | `--speech-lang-mode` | `auto` | `auto` (detect Cyrillic) or `fixed` (always use default) |
 | `--history-limit` | `100` | Max messages to keep in history |
@@ -199,10 +199,41 @@ All options have sensible defaults. You only need `--bot-api-token`. But if you 
 ## Requirements
 
 - **Telegram Bot** (free, create with [@BotFather](https://t.me/botfather))
+- **OBS**: v28+ recommended
+
+### Speech Synthesis (Linux only: piper or edge-tts)
+
+For better audio quality on Linux, you can use `piper` (offline neural voices) or `edge-tts` (online Microsoft neural voices):
+
+#### Piper (offline, recommended)
+
+```bash
+pip install piper-tts
+# Download a voice model (optional, auto-downloads on first use):
+piper --model ru_RU-dmitri_bozhinskiy-medium --help
+```
+
+Then run:
+```bash
+./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN --speech-engine piper
+```
+
+#### edge-tts (online, requires internet)
+
+```bash
+pip install edge-tts
+```
+
+Then run:
+```bash
+./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN --speech-engine edge-tts
+```
+
+### Native TTS (macOS, Windows, Linux fallback)
+
 - **macOS**: Built-in `say` command (always available)
 - **Linux**: `espeak-ng` (`apt install espeak-ng` on Ubuntu/Debian)
 - **Windows**: Built-in (no extra install needed)
-- **OBS**: v28+ recommended
 
 ## License
 

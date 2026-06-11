@@ -96,9 +96,20 @@
       const speechLangMode = (overlaySettings.speechLangMode || 'fixed').toLowerCase();
       const audioUnlockRoot = document.getElementById('audio-unlock');
       const audioUnlockButton = document.getElementById('audio-unlock-button');
+      const isServerSideSpeech = speechEngine === 'local' || speechEngine === 'piper' || speechEngine === 'edge-tts';
       let speechQueue = Promise.resolve();
       let pendingSpeechBlobs = [];
-      let audioUnlocked = speechEngine !== 'local';
+
+      // AudioContext is the only reliable way to play audio in OBS Browser Source
+      // with "Control audio via OBS" enabled AND to satisfy autoplay policy correctly.
+      let audioCtx = null;
+
+      const getAudioContext = () => {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        return audioCtx;
+      };
 
       const renderClock = (isoDate) => {
         const date = new Date(isoDate);
@@ -126,7 +137,7 @@
 
         const sender = document.createElement('span');
         sender.className = 'sender';
-  sender.textContent = renderSender(msg);
+        sender.textContent = renderSender(msg);
 
         const clock = document.createElement('span');
         clock.textContent = renderClock(msg.sentUtc);
@@ -161,7 +172,7 @@
 
         const lang = resolveSpeechLang(text);
 
-        if (speechEngine === 'local') {
+        if (isServerSideSpeech) {
           enqueueSpeech(async () => {
             const response = await fetch('/api/speech', {
               method: 'POST',
@@ -170,12 +181,11 @@
             });
 
             if (!response.ok) {
-              console.warn('Local speech request failed', response.status);
+              console.warn('Server speech request failed', response.status);
               return;
             }
 
             const blob = await response.blob();
-            console.log(`Speech blob received: ${blob.size} bytes, type=${blob.type}`);
             if (blob.size === 0) {
               console.error('Speech blob is empty');
               return;
@@ -235,8 +245,11 @@
         });
       };
 
-      const unlockAudio = () => {
-        audioUnlocked = true;
+      const unlockAudio = async () => {
+        const ctx = getAudioContext();
+        if (ctx.state === 'suspended') {
+          await ctx.resume();
+        }
         hideAudioUnlockPrompt();
         flushPendingSpeech();
       };
@@ -246,35 +259,29 @@
       }
 
       const playAudioBlob = async (blob) => {
-        if (speechEngine === 'local' && !audioUnlocked) {
+        const ctx = getAudioContext();
+
+        // AudioContext starts suspended until a user gesture resumes it.
+        if (ctx.state === 'suspended') {
           pendingSpeechBlobs.push(blob);
           showAudioUnlockPrompt();
           return;
         }
 
-        const audioUrl = URL.createObjectURL(blob);
-
         try {
-          const audio = new Audio(audioUrl);
-          try {
-            await audio.play();
-          } catch (error) {
-            if (error && error.name === 'NotAllowedError') {
-              audioUnlocked = false;
-              pendingSpeechBlobs.push(blob);
-              showAudioUnlockPrompt();
-              return;
-            }
+          const arrayBuffer = await blob.arrayBuffer();
+          const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
 
-            throw error;
-          }
-
-          await new Promise((resolve) => {
-            audio.onended = resolve;
-            audio.onerror = resolve;
+          await new Promise((resolve, reject) => {
+            const source = ctx.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(ctx.destination);
+            source.onended = resolve;
+            source.onerror = reject;
+            source.start();
           });
-        } finally {
-          URL.revokeObjectURL(audioUrl);
+        } catch (error) {
+          console.error('Audio playback error', error);
         }
       };
 

@@ -6,6 +6,7 @@ using ObsTelegramOverlay.Presentation.Realtime;
 using ObsTelegramOverlay.Presentation.Speech;
 using ObsTelegramOverlay.Presentation.Templating;
 using Spectre.Console;
+using System.Runtime.InteropServices;
 
 namespace ObsTelegramOverlay.Presentation.Hosting;
 
@@ -23,17 +24,34 @@ public static class OverlayHost
         builder.Services.AddSignalR();
         builder.Services.AddSingleton(new OverlayMessageStore(options.HistoryLimit));
         builder.Services.AddSingleton<OverlayTemplateProvider>();
-        builder.Services.AddSingleton<LocalSpeechSynthesisService>();
+        builder.Services.AddSingleton<MacOsSpeechSynthesisService>();
+        builder.Services.AddSingleton<LinuxSpeechSynthesisService>();
+        builder.Services.AddSingleton<WindowsSpeechSynthesisService>();
+        builder.Services.AddSingleton<PiperSpeechSynthesisService>();
+        builder.Services.AddSingleton<EdgeTtsSpeechSynthesisService>();
+        builder.Services.AddSingleton<SpeechSynthesisServiceFactory>();
         builder.Services.AddSingleton<IOverlayMessagePublisher, SignalrOverlayMessagePublisher>();
         builder.Services.AddTelegramPolling(options.BotApiToken, options.AllowedChatIds);
 
         var app = builder.Build();
-        var localSpeech = app.Services.GetRequiredService<LocalSpeechSynthesisService>();
-        var effectiveSpeechEngine = ResolveSpeechEngine(options, localSpeech, out var speechNotice);
+        var factory = app.Services.GetRequiredService<SpeechSynthesisServiceFactory>();
+        var speechService = factory.ResolveSpeechService(options.SpeechEngine, out var errorMessage);
 
-        if (!string.IsNullOrWhiteSpace(speechNotice))
+        // JS side only needs to distinguish between server-side engines (local / piper / edge-tts) and none.
+        // All OS-specific "local" services are reported as "local" to the browser.
+        var effectiveSpeechEngine = speechService switch
         {
-            AnsiConsole.MarkupLine($"[yellow]{speechNotice}[/]");
+            MacOsSpeechSynthesisService => "local",
+            LinuxSpeechSynthesisService => "local",
+            WindowsSpeechSynthesisService => "local",
+            PiperSpeechSynthesisService => "piper",
+            EdgeTtsSpeechSynthesisService => "edge-tts",
+            _ => "none"
+        };
+
+        if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            AnsiConsole.MarkupLine($"[yellow]{errorMessage}[/]");
         }
 
         AnsiConsole.MarkupLine($"[green]Speech engine:[/] {effectiveSpeechEngine} (lang mode: {options.SpeechLangMode}, default lang: {options.SpeechLang})");
@@ -47,7 +65,7 @@ public static class OverlayHost
 
         app.MapPost("/api/speech", async (SpeechRequest request, CancellationToken ct) =>
         {
-            if (effectiveSpeechEngine != "local")
+            if (speechService is null || effectiveSpeechEngine == "none")
             {
                 return Results.NotFound();
             }
@@ -57,7 +75,7 @@ public static class OverlayHost
                 return Results.BadRequest(new { error = "Text is required." });
             }
 
-            var result = await localSpeech.SynthesizeAsync(request.Text.Trim(), request.Lang.Trim(), ct);
+            var result = await speechService.SynthesizeAsync(request.Text.Trim(), request.Lang.Trim(), ct);
             if (result is null)
             {
                 return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
@@ -95,27 +113,5 @@ public static class OverlayHost
 
         return settingsScript + html;
     }
-
-    private static string ResolveSpeechEngine(RuntimeOptions options, LocalSpeechSynthesisService localSpeech, out string? notice)
-    {
-        notice = null;
-
-        if (options.SpeechEngine == "browser")
-        {
-            return "browser";
-        }
-
-        if (options.SpeechEngine == "local")
-        {
-            if (localSpeech.IsAvailable(out var reason))
-            {
-                return "local";
-            }
-
-            notice = $"Local speech requested but unavailable ({reason}). Falling back to browser engine.";
-            return "browser";
-        }
-
-        return "browser";
-    }
 }
+

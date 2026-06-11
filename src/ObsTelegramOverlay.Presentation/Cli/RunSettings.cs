@@ -32,7 +32,7 @@ public sealed class RunSettings : CommandSettings
     [DefaultValue(false)]
     public bool SpeechEnabled { get; init; }
 
-    [Description("Speech engine: browser|local. local requires utilities by OS (macOS: say, Linux: espeak-ng, Windows: PowerShell/System.Speech). If local is requested but unavailable, fallback to browser.")]
+    [Description("Speech engine: local|piper|edge-tts. On Linux: local uses espeak-ng, piper/edge-tts use neural voices. On macOS/Windows: only local is supported (uses native TTS). Local requires: macOS=say, Linux=espeak-ng, Windows=PowerShell/System.Speech. Piper requires: pip install piper-tts. edge-tts requires: pip install edge-tts + internet.")]
     [CommandOption("--speech-engine <ENGINE>")]
     [DefaultValue("local")]
     public string SpeechEngine { get; init; } = "local";

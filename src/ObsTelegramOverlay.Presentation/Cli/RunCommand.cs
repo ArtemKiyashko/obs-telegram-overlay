@@ -1,6 +1,7 @@
 using ObsTelegramOverlay.Presentation.Hosting;
 using Spectre.Console;
 using Spectre.Console.Cli;
+using System.Runtime.InteropServices;
 
 namespace ObsTelegramOverlay.Presentation.Cli;
 
@@ -34,9 +35,15 @@ public sealed class RunCommand : AsyncCommand<RunSettings>
 
         var speechEngine = settings.SpeechEngine.Trim().ToLowerInvariant();
 
-        if (speechEngine is not ("browser" or "local"))
+        if (speechEngine is not ("local" or "piper" or "edge-tts"))
         {
-            AnsiConsole.MarkupLine("[red]--speech-engine must be one of: browser, local.[/]");
+            AnsiConsole.MarkupLine("[red]--speech-engine must be one of: local, piper, edge-tts.[/]");
+            return 2;
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) is false && speechEngine is "piper" or "edge-tts")
+        {
+            AnsiConsole.MarkupLine($"[red]--speech-engine {speechEngine} is only supported on Linux.[/]");
             return 2;
         }
 

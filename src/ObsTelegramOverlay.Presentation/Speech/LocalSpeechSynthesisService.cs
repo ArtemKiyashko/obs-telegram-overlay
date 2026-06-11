@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ObsTelegramOverlay.Presentation.Speech;
 
-public sealed class LocalSpeechSynthesisService
+public sealed class LocalSpeechSynthesisService : ISpeechSynthesisService
 {
     private readonly ILogger<LocalSpeechSynthesisService> _logger;
 
