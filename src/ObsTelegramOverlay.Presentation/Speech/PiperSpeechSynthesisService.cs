@@ -18,9 +18,9 @@ public sealed class PiperSpeechSynthesisService : ISpeechSynthesisService
 
     public bool IsAvailable(out string reason)
     {
-        if (!IsCommandAvailable("piper"))
+        if (!IsCommandAvailable("python3"))
         {
-            reason = "Piper CLI not found. Install with: pip install piper-tts";
+            reason = "python3 not found. Install Python 3 to use Piper TTS.";
             return false;
         }
 
@@ -50,14 +50,15 @@ public sealed class PiperSpeechSynthesisService : ISpeechSynthesisService
 
             var process = Process.Start(new ProcessStartInfo
             {
-                FileName = "piper",
+                FileName = "python3",
                 ArgumentList =
                 {
-                    "--model", voiceModel,
-                    "--output-file", outputPath,
-                    "--quiet"
+                    "-m", "piper",
+                    "-m", voiceModel,
+                    "-f", outputPath,
+                    "--",
+                    text
                 },
-                RedirectStandardInput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -68,11 +69,6 @@ public sealed class PiperSpeechSynthesisService : ISpeechSynthesisService
                 _logger.LogError("Failed to start 'piper' process");
                 return null;
             }
-
-            // Write text to stdin
-            await process.StandardInput.WriteLineAsync(text);
-            await process.StandardInput.FlushAsync();
-            process.StandardInput.Close();
 
             await process.WaitForExitAsync(cancellationToken);
 
