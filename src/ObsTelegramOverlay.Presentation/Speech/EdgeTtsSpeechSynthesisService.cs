@@ -29,7 +29,7 @@ public sealed class EdgeTtsSpeechSynthesisService : ISpeechSynthesisService
         return true;
     }
 
-    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, CancellationToken cancellationToken)
+    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, string? voice, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -46,14 +46,14 @@ public sealed class EdgeTtsSpeechSynthesisService : ISpeechSynthesisService
 
         try
         {
-            var voice = ResolveVoice(lang);
+            var selectedVoice = ResolveVoice(lang, voice);
 
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = "edge-tts",
                 ArgumentList =
                 {
-                    "--voice", voice,
+                    "--voice", selectedVoice,
                     "--write-media", outputPath,
                     text
                 },
@@ -100,8 +100,13 @@ public sealed class EdgeTtsSpeechSynthesisService : ISpeechSynthesisService
         }
     }
 
-    private static string ResolveVoice(string lang)
+    private static string ResolveVoice(string lang, string? voice)
     {
+        if (!string.IsNullOrWhiteSpace(voice))
+        {
+            return voice.Trim();
+        }
+
         if (lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase))
         {
             return "ru-RU-DariyaNeural";

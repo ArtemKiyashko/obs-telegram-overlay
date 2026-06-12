@@ -28,7 +28,7 @@ public sealed class PiperSpeechSynthesisService : ISpeechSynthesisService
         return true;
     }
 
-    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, CancellationToken cancellationToken)
+    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, string? voice, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -45,8 +45,8 @@ public sealed class PiperSpeechSynthesisService : ISpeechSynthesisService
 
         try
         {
-            // Map language codes to Piper voice models
-            var voiceModel = ResolveVoiceModel(lang);
+            // Use explicit override when provided; otherwise fall back to a sensible per-language default.
+            var voiceModel = ResolveVoiceModel(lang, voice);
 
             var process = Process.Start(new ProcessStartInfo
             {
@@ -106,8 +106,13 @@ public sealed class PiperSpeechSynthesisService : ISpeechSynthesisService
         }
     }
 
-    private static string ResolveVoiceModel(string lang)
+    private static string ResolveVoiceModel(string lang, string? voice)
     {
+        if (!string.IsNullOrWhiteSpace(voice))
+        {
+            return voice.Trim();
+        }
+
         if (lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase))
         {
             return "ru_RU-dmitri_bozhinskiy-medium";

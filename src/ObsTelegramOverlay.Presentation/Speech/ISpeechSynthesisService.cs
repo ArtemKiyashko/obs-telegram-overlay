@@ -17,7 +17,8 @@ public interface ISpeechSynthesisService
     /// </summary>
     /// <param name="text">The text to synthesize.</param>
     /// <param name="lang">Language code (e.g., "ru-RU", "en-US").</param>
+    /// <param name="voice">Optional engine-specific voice override.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Synthesized audio or null if synthesis failed.</returns>
-    Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, CancellationToken cancellationToken);
+    Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, string? voice, CancellationToken cancellationToken);
 }

@@ -45,4 +45,8 @@ public sealed class RunSettings : CommandSettings
     [CommandOption("--speech-lang-mode <MODE>")]
     [DefaultValue("auto")]
     public string SpeechLangMode { get; init; } = "auto";
+
+    [Description("Speech voice override shared by supported TTS engines. Leave empty to use the engine default.")]
+    [CommandOption("--speech-voice <VOICE>")]
+    public string? SpeechVoice { get; init; }
 }

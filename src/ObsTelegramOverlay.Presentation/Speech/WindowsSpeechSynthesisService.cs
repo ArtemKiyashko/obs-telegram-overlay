@@ -21,7 +21,7 @@ public sealed class WindowsSpeechSynthesisService : ISpeechSynthesisService
         return true;
     }
 
-    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, CancellationToken cancellationToken)
+    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, string? voice, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -36,11 +36,14 @@ public sealed class WindowsSpeechSynthesisService : ISpeechSynthesisService
             var escapedPath = outputPath.Replace("'", "''", StringComparison.Ordinal);
             var escapedCulture = (lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "ru-RU" : "en-US")
                 .Replace("'", "''", StringComparison.Ordinal);
+            var selectedVoice = string.IsNullOrWhiteSpace(voice) ? null : voice.Trim().Replace("'", "''", StringComparison.Ordinal);
 
             var script = string.Join(';',
                 "Add-Type -AssemblyName System.Speech",
                 "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer",
-                $"$s.SelectVoiceByHints([System.Speech.Synthesis.VoiceGender]::NotSet,[System.Speech.Synthesis.VoiceAge]::NotSet,0,'{escapedCulture}')",
+                string.IsNullOrWhiteSpace(selectedVoice)
+                    ? $"$s.SelectVoiceByHints([System.Speech.Synthesis.VoiceGender]::NotSet,[System.Speech.Synthesis.VoiceAge]::NotSet,0,'{escapedCulture}')"
+                    : $"$s.SelectVoice('{selectedVoice}')",
                 $"$s.SetOutputToWaveFile('{escapedPath}')",
                 $"$s.Speak('{escapedText}')",
                 "$s.Dispose()"

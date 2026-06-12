@@ -10,5 +10,6 @@ public sealed record RuntimeOptions(
     bool SpeechEnabled,
     string SpeechEngine,
     string SpeechLang,
-    string SpeechLangMode
+    string SpeechLangMode,
+    string? SpeechVoice
 );

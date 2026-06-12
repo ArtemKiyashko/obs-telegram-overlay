@@ -75,7 +75,7 @@ public static class OverlayHost
                 return Results.BadRequest(new { error = "Text is required." });
             }
 
-            var result = await speechService.SynthesizeAsync(request.Text.Trim(), request.Lang.Trim(), ct);
+            var result = await speechService.SynthesizeAsync(request.Text.Trim(), request.Lang.Trim(), options.SpeechVoice, ct);
             if (result is null)
             {
                 return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);

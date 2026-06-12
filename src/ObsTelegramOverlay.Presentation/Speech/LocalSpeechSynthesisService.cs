@@ -50,7 +50,7 @@ public sealed class LocalSpeechSynthesisService : ISpeechSynthesisService
         return false;
     }
 
-    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, CancellationToken cancellationToken)
+    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, string? voice, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(text))
         {

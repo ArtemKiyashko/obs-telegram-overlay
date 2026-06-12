@@ -80,7 +80,8 @@ public sealed class RunCommand : AsyncCommand<RunSettings>
             SpeechEnabled: settings.SpeechEnabled,
             SpeechEngine: speechEngine,
             SpeechLang: settings.SpeechLang.Trim(),
-            SpeechLangMode: speechLangMode);
+            SpeechLangMode: speechLangMode,
+            SpeechVoice: string.IsNullOrWhiteSpace(settings.SpeechVoice) ? null : settings.SpeechVoice.Trim());
 
         using var shutdown = new CancellationTokenSource();
         Console.CancelKeyPress += (_, eventArgs) =>

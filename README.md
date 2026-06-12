@@ -149,6 +149,7 @@ All options have sensible defaults. You only need `--bot-api-token`. But if you 
   --allowed-chat-ids -1001234567890 \
   --message-ttl-seconds 15 \
   --speech-lang ru-RU \
+  --speech-voice ru-RU-DariyaNeural \
   --speech-lang-mode fixed
 ```
 
@@ -163,6 +164,7 @@ All options have sensible defaults. You only need `--bot-api-token`. But if you 
 | `--speech-engine` | `local` | `local` (native TTS), `piper` (offline neural, Linux only), `edge-tts` (online neural, Linux only) |
 | `--speech-lang` | `ru-RU` | Default language for speech (`ru-RU`, `en-US`) |
 | `--speech-lang-mode` | `auto` | `auto` (detect Cyrillic) or `fixed` (always use default) |
+| `--speech-voice` | *(empty)* | Optional voice override. Uses engine defaults when empty. For `local`, this is the exact system voice name; for `piper`, a Piper model path/name; for `edge-tts`, a Microsoft voice name. |
 | `--history-limit` | `100` | Max messages to keep in history |
 
 ## Keyboard Shortcuts
@@ -218,6 +220,11 @@ Then run:
 ./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN --speech-engine piper
 ```
 
+You can also override the voice/model:
+```bash
+./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN --speech-engine piper --speech-voice ru_RU-dmitri_bozhinskiy-medium
+```
+
 #### edge-tts (online, requires internet)
 
 ```bash
@@ -229,11 +236,18 @@ Then run:
 ./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN --speech-engine edge-tts
 ```
 
+To choose a specific voice:
+```bash
+./obstelegramoverlay_bot --bot-api-token YOUR_TOKEN --speech-engine edge-tts --speech-voice ru-RU-DariyaNeural
+```
+
 ### Native TTS (macOS, Windows, Linux fallback)
 
 - **macOS**: Built-in `say` command (always available)
 - **Linux**: `espeak-ng` (`apt install espeak-ng` on Ubuntu/Debian)
 - **Windows**: Built-in (no extra install needed)
+
+If you want to override the native voice, pass `--speech-voice` with the exact engine-specific voice name.
 
 ## License
 

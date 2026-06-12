@@ -28,7 +28,7 @@ public sealed class LinuxSpeechSynthesisService : ISpeechSynthesisService
         return false;
     }
 
-    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, CancellationToken cancellationToken)
+    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, string? voice, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -42,7 +42,9 @@ public sealed class LinuxSpeechSynthesisService : ISpeechSynthesisService
         }
 
         var outputPath = Path.Combine(Path.GetTempPath(), $"obstelegramoverlay-{Guid.NewGuid():N}.wav");
-        var voice = lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "ru" : "en-us";
+        var selectedVoice = string.IsNullOrWhiteSpace(voice)
+            ? (lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "ru" : "en-us")
+            : voice.Trim();
         var normalizedText = NormalizeLinuxSpeechText(text);
 
         try
@@ -53,7 +55,7 @@ public sealed class LinuxSpeechSynthesisService : ISpeechSynthesisService
                 ArgumentList =
                 {
                     "-b", "1", // Force UTF-8 input decoding
-                    "-v", voice,
+                    "-v", selectedVoice,
                     "-s", "120", // Slightly faster than 115 but still readable
                     "-p", "28", // Lower pitch to avoid squeaky voice
                     "-g", "5", // Moderate word gap without robotic pauses

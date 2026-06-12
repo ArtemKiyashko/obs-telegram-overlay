@@ -27,7 +27,7 @@ public sealed class MacOsSpeechSynthesisService : ISpeechSynthesisService
         return false;
     }
 
-    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, CancellationToken cancellationToken)
+    public async Task<SpeechSynthesisResult?> SynthesizeAsync(string text, string lang, string? voice, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
@@ -41,14 +41,16 @@ public sealed class MacOsSpeechSynthesisService : ISpeechSynthesisService
         }
 
         var outputPath = Path.Combine(Path.GetTempPath(), $"obstelegramoverlay-{Guid.NewGuid():N}.wav");
-        var voice = lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "Milena" : "Samantha";
+        var selectedVoice = string.IsNullOrWhiteSpace(voice)
+            ? (lang.StartsWith("ru", StringComparison.OrdinalIgnoreCase) ? "Milena" : "Samantha")
+            : voice.Trim();
 
         try
         {
             var process = Process.Start(new ProcessStartInfo
             {
                 FileName = "say",
-                ArgumentList = { "-v", voice, "-o", outputPath, "--data-format=LEI16@44100", text },
+                ArgumentList = { "-v", selectedVoice, "-o", outputPath, "--data-format=LEI16@44100", text },
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
