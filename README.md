@@ -23,35 +23,36 @@ Perfect for:
 
 ## Installation
 
-### macOS / Linux
+### macOS / Linux — one-liner
 
-1. Download the latest release for your platform from [Releases](../../releases)
-2. Make it executable:
-   ```bash
-   chmod +x obstelegramoverlay_bot
-   ```
+```bash
+curl -fsSL https://raw.githubusercontent.com/ArtemKiyashko/obs-telegram-overlay/main/install.sh | bash
+```
+
+The script auto-detects your OS and architecture, downloads the latest release binary and installs it to `~/.local/bin`.
 
 #### macOS first run (Apple security warning)
 
-On the first launch, macOS may show a warning like:
-"Apple cannot check this app for malicious software" and suggest moving it to Trash.
-
-If that happens:
+The install script automatically removes the quarantine attribute (`xattr`), but on the first launch macOS may still show a warning. If that happens:
 
 1. Close the warning dialog (do not delete the file)
 2. Open **System Settings** → **Privacy & Security**
-3. Scroll down to the security section with the blocked app message
+3. Scroll down to the blocked app message
 4. Click **Open Anyway**
-5. Start the app again
-6. In the next confirmation dialog, click **Open Anyway**
-7. Enter your admin password when prompted
 
 After this one-time approval, the binary runs normally.
-You usually only need to repeat these steps after downloading a new version.
 
-### Windows
+### Windows — one-liner (PowerShell)
 
-Download the `.exe` from [Releases](../../releases) — no installation needed.
+```powershell
+irm https://raw.githubusercontent.com/ArtemKiyashko/obs-telegram-overlay/main/install.ps1 | iex
+```
+
+Installs to `%LOCALAPPDATA%\obstelegramoverlay` and adds it to the user PATH.
+
+### Manual install
+
+Download the binary for your platform from [Releases](../../releases), make it executable (macOS/Linux: `chmod +x obstelegramoverlay_bot`) and run it directly.
 
 ## Quick Start
 
