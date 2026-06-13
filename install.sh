@@ -4,6 +4,7 @@ set -euo pipefail
 REPO="ArtemKiyashko/obs-telegram-overlay"
 BINARY="obstelegramoverlay_bot"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
+ARCHIVE_PREFIX="obs-telegram-overlay"
 
 # ── Detect OS / arch ─────────────────────────────────────────────────────────
 OS="$(uname -s)"
@@ -44,16 +45,22 @@ fi
 echo "Latest release: $LATEST_TAG"
 
 # ── Download ──────────────────────────────────────────────────────────────────
-DOWNLOAD_URL="https://github.com/$REPO/releases/download/$LATEST_TAG/${BINARY}_${RID}"
-TMP_FILE="$(mktemp)"
+ARCHIVE_NAME="${ARCHIVE_PREFIX}-${LATEST_TAG}-${RID}.tar.gz"
+DOWNLOAD_URL="https://github.com/$REPO/releases/download/$LATEST_TAG/$ARCHIVE_NAME"
+TMP_DIR="$(mktemp -d)"
+TMP_ARCHIVE="$TMP_DIR/$ARCHIVE_NAME"
 
-echo "Downloading $BINARY ($RID)..."
-curl -fsSL --progress-bar -o "$TMP_FILE" "$DOWNLOAD_URL"
+echo "Downloading $ARCHIVE_NAME..."
+curl -fsSL --progress-bar -o "$TMP_ARCHIVE" "$DOWNLOAD_URL"
+
+echo "Extracting..."
+tar -xzf "$TMP_ARCHIVE" -C "$TMP_DIR"
 
 # ── Install ───────────────────────────────────────────────────────────────────
 mkdir -p "$INSTALL_DIR"
-mv "$TMP_FILE" "$INSTALL_DIR/$BINARY"
+mv "$TMP_DIR/$BINARY" "$INSTALL_DIR/$BINARY"
 chmod +x "$INSTALL_DIR/$BINARY"
+rm -rf "$TMP_DIR"
 
 echo ""
 echo "Installed: $INSTALL_DIR/$BINARY"

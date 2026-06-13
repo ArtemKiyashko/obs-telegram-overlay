@@ -6,8 +6,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$Repo   = "ArtemKiyashko/obs-telegram-overlay"
-$Binary = "obstelegramoverlay_bot.exe"
+$Repo          = "ArtemKiyashko/obs-telegram-overlay"
+$Binary        = "obstelegramoverlay_bot.exe"
+$ArchivePrefix = "obs-telegram-overlay"
 
 # ── Detect arch ───────────────────────────────────────────────────────────────
 $Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
@@ -33,20 +34,28 @@ if (-not $Tag) {
 Write-Host "Latest release: $Tag"
 
 # ── Download ──────────────────────────────────────────────────────────────────
-$FileName    = "${Binary}" -replace '\.exe$', "_${Rid}.exe"
-$DownloadUrl = "https://github.com/$Repo/releases/download/$Tag/$FileName"
-$TmpPath     = Join-Path $env:TEMP $FileName
+$ArchiveName = "$ArchivePrefix-$Tag-$Rid.zip"
+$DownloadUrl = "https://github.com/$Repo/releases/download/$Tag/$ArchiveName"
+$TmpDir      = Join-Path $env:TEMP "obstelegramoverlay-install"
+$TmpArchive  = Join-Path $TmpDir $ArchiveName
 
-Write-Host "Downloading $FileName..."
-Invoke-WebRequest -Uri $DownloadUrl -OutFile $TmpPath -UseBasicParsing
+New-Item -ItemType Directory -Path $TmpDir -Force | Out-Null
+
+Write-Host "Downloading $ArchiveName..."
+Invoke-WebRequest -Uri $DownloadUrl -OutFile $TmpArchive -UseBasicParsing
+
+Write-Host "Extracting..."
+Expand-Archive -Path $TmpArchive -DestinationPath $TmpDir -Force
 
 # ── Install ───────────────────────────────────────────────────────────────────
 if (-not (Test-Path $InstallDir)) {
     New-Item -ItemType Directory -Path $InstallDir | Out-Null
 }
 
+$Src  = Join-Path $TmpDir $Binary
 $Dest = Join-Path $InstallDir $Binary
-Move-Item -Path $TmpPath -Destination $Dest -Force
+Move-Item -Path $Src -Destination $Dest -Force
+Remove-Item -Recurse -Force $TmpDir
 
 Write-Host ""
 Write-Host "Installed: $Dest"
